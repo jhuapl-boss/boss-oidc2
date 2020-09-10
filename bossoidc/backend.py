@@ -19,12 +19,15 @@ from rest_framework.exceptions import AuthenticationFailed
 from rest_framework.settings import import_from_string
 from rest_framework.authentication import get_authorization_header
 
+from django.utils.encoding import force_bytes, smart_text, smart_bytes
 from django.utils.translation import ugettext as _
-from djangooidc.backends import OpenIdConnectBackend as DOIDCBackend
+from mozilla_django_oidc.auth import OIDCAuthenticationBackend
 
 from bossoidc.models import Keycloak as KeycloakModel
 from jwkest.jwt import JWT
+from josepy.jws import JWS, Header
 
+import requests
 import json
 import logging
 
@@ -107,7 +110,23 @@ def get_user_by_id(request, userinfo):
     audience = get_token_audience(access_token)
     if not token_audience_is_valid(audience):
         return None
+    return get_user_with_id(access_token, userinfo)
 
+def get_user_with_id(access_token, userinfo):
+    """Common functionality for getting or creating the user.  Used by both
+    mozilla_django_oidc and drf-oidc-auth.
+
+    Args:
+        access_token ():
+        userinfo (dict): Dictionary of userinfo requested from Keycloak with the
+
+    Returns:
+        UserModel: user object for the requesting user
+        None: If the requesting user's token's audience is not valid
+
+    Raises:
+        AuthenticationFailed: If the requesting user's username is too long
+    """
     UserModel = get_user_model()
     uid = userinfo['sub']
     username = userinfo['preferred_username']
@@ -141,7 +160,7 @@ def get_user_by_id(request, userinfo):
         try:
             user = UserModel.objects.get_by_natural_key(username)
 
-            fmt = "Deleting user '{}' becuase it matches the authenticated Keycloak username"
+            fmt = "Deleting user '{}' because it matches the authenticated Keycloak username"
             _log('get_user_by_id').info(fmt.format(username))
 
             # remove existing user account, so permissions are not transfered
@@ -264,15 +283,93 @@ def token_audience_is_valid(audience):
     return result
 
 
-class OpenIdConnectBackend(DOIDCBackend): # pragma: no cover
+class OpenIdConnectBackend(OIDCAuthenticationBackend): # pragma: no cover
     """Subclass of the Django OIDC Backend that makes use of our get_user_by_id
     implementation
     """
 
-    def authenticate(self, request=None, **kwargs):
-        user = None
-        if not kwargs or 'sub' not in kwargs.keys():
-            return user
+    def retrieve_matching_jwk(self, token):
+        """Get the signing key by exploring the JWKS endpoint of the OP.
 
-        user = get_user_by_id(request, kwargs)
+        Overriding original method because KeyCloak isn't providing the key id
+        in the token.  Since there's only one jwks key, try using that key
+        to verify the token's signature.
+
+        Args:
+            token
+
+        Returns:
+            Public signing key for the KeyCloak realm.
+
+        Raises:
+            (SuspiciousOperation)
+        """
+        response_jwks = requests.get(
+            self.OIDC_OP_JWKS_ENDPOINT,
+            verify=self.get_settings('OIDC_VERIFY_SSL', True)
+        )
+        response_jwks.raise_for_status()
+        jwks = response_jwks.json()
+
+        # Compute the current header from the given token to find a match
+        jws = JWS.from_compact(token)
+        json_header = jws.signature.protected
+        header = Header.json_loads(json_header)
+
+        key = None
+        num_keys = len(jwks['keys'])
+        for jwk in jwks['keys']:
+            # If there's only one key, then try it even if the key id doesn't
+            # match or is None.
+            if jwk['kid'] != smart_text(header.kid) and num_keys > 1:
+                continue
+            if 'alg' in jwk and jwk['alg'] != smart_text(header.alg):
+                raise SuspiciousOperation('alg values do not match.')
+            key = jwk
+        if key is None:
+            raise SuspiciousOperation('Could not find a valid JWKS.')
+        return key
+
+    def verify_claims(self, claims):
+        """Ensure required claims provided.
+
+        Claims are specified by the OIDC_RP_SCOPES variable in the Django
+        settings.
+
+        Args:
+            claims (list[str]): Claims provided.
+
+        Returns:
+            (boolean)
+        """
+        scopes = self.get_settings('OIDC_RP_SCOPES', 'sub preferred_username').split()
+
+        for field in scopes:
+            if field not in claims:
+                return False
+
+        return True
+
+    def get_or_create_user(self, access_token, id_token, payload):
+        """Get or create the user based on the provided arguments.
+
+        Args:
+            access_token
+            id_token
+            payload
+
+        Returns:
+            User info.
+
+        Raises:
+            (SuspiciousOperation): When not all required claims provided.
+        """
+        user_info = self.get_userinfo(access_token, id_token, payload)
+        claims_verified = self.verify_claims(user_info)
+        if not claims_verified:
+            msg = 'Claims verification failed'
+            raise SuspiciousOperation(msg)
+
+        decoded_token = JWT().unpack(access_token).payload()
+        user = get_user_with_id(decoded_token, user_info)
         return user
