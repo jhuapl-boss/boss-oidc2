@@ -1,5 +1,4 @@
-Django Authentication OpenID Connect plugin for the Boss SSO
-============================================================
+# Django Authentication OpenID Connect plugin for the Boss SSO
 
 This package configures the mozilla-django-oidc and drf-oidc-auth Django
 authentication plugins for use with the Boss Keycloak authentication server providing
@@ -10,15 +9,21 @@ Auth server, there may be some Keycloak specific implementation details that are
 captured in the code. Testing with other OIDC providers has not been tested.
 
 
-Quickstart
-----------
+## Compatibility
 
-Install bossoidc:
+This plugin is tested and used with Keycloak 11.0.0 and Django 2.2.x.
+
+
+## Quickstart
+
+Install bossoidc2:
 
 ```sh
 pip install mozilla-django-oidc
 pip install drf-oidc-auth
-pip install git+https://github.com/jhuapl-boss/boss-oidc.git@mozilla#egg=boss-oidc
+
+# Replace v2.0.0 with the tag or branch you need.
+pip install git+https://github.com/jhuapl-boss/boss-oidc2.git@v2.0.0#egg=boss-oidc2
 ```
 
 Configure authentication for Django and Django REST Framework in settings.py:
@@ -26,11 +31,11 @@ Configure authentication for Django and Django REST Framework in settings.py:
 ```py
 INSTALLED_APPS = [
     # ...
-    'bossoidc',
-    'djangooidc',
+    'bossoidc2',
+    'mozilla_django_oidc',
 ]
 
-AUTHENTICATION_BACKENDS.insert(1, 'bossoidc.backend.OpenIdConnectBackend') 
+AUTHENTICATION_BACKENDS.insert(1, 'bossoidc2.backend.OpenIdConnectBackend') 
 
 REST_FRAMEWORK['DEFAULT_AUTHENTICATION_CLASSES'] = (
     'mozilla_django_oidc.contrib.drf.OIDCAuthentication',
@@ -102,8 +107,7 @@ You may now test the authentication by going to (on the development server) http
 of your views that requires authentication.
 
 
-Features
---------
+## Features
 
 * Ready to use Django authentication backend
 * Fully integrated with Django's internal accounts and permission system
@@ -111,15 +115,12 @@ Features
 * Support for OpenID Connect Bearer Token Authentication
 
 
-Contributing
-------------
+## Contributing
 
 If the bossoidc model is updated or extended to update the Django ORM migrations files run `python setup.py makemigrations` and commit the newly generated files.
 
 
-Legal
------
-
+## Legal
 
 Use or redistribution of the Boss system in source and/or binary forms, with or without modification, are permitted provided that the following conditions are met:
 
