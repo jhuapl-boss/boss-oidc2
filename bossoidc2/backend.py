@@ -24,7 +24,7 @@ from django.utils.encoding import force_bytes, smart_text, smart_bytes
 from django.utils.translation import ugettext as _
 from mozilla_django_oidc.auth import OIDCAuthenticationBackend
 
-from bossoidc.models import Keycloak as KeycloakModel
+from bossoidc2.models import Keycloak as KeycloakModel
 from jwkest.jwt import JWT
 from josepy.jws import JWS, Header
 

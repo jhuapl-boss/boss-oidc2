@@ -18,3 +18,9 @@ from django.db import models
 class Keycloak(models.Model):
     user = models.OneToOneField(settings.AUTH_USER_MODEL, on_delete=models.CASCADE)
     UID = models.CharField(max_length=37, primary_key=True)
+
+    class Meta:
+
+        # Override default table name so this matches the table used by the
+        # previous bossoidc package.
+        db_table = 'bossoidc_keycloak'
