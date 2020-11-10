@@ -16,7 +16,7 @@
 # limitations under the License.
 
 import os
-from setuptools import setup, find_packages 
+from setuptools import setup, find_packages
 
 here = os.path.abspath(os.path.dirname(__file__))
 def read(filename):
@@ -26,7 +26,7 @@ def read(filename):
 if __name__ == '__main__':
     setup(
         name='boss-oidc2',
-        version='2.0.0',
+        version='2.0.1',
         packages=find_packages(),
         url='https://github.com/jhuapl-boss/boss-oidc2',
         license="Apache Software License",

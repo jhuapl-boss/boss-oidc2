@@ -1,5 +1,6 @@
 # BOSS OIDC2 Django Authentication Plugin
 
+* v2.0.1 : Add missing migration file
 * v2.0.0 : Major upgrades
   * Keycloak 11.0.0, Keycloak 1.9.x no longer supported
   * Django 2.2.x, Django 1.x no longer supported
