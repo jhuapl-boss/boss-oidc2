@@ -241,6 +241,8 @@ def get_access_token(request):
     access_token = request.session.get("access_token")
     if access_token is None:  # Bearer token login
         access_token = get_authorization_header(request).split()[1]
+        if not access_token:
+            access_token = 'public'
     return JWT().unpack(access_token).payload()
 
 
