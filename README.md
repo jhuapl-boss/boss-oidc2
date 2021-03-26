@@ -21,6 +21,7 @@ Install bossoidc2:
 ```sh
 pip install mozilla-django-oidc
 pip install drf-oidc-auth
+pip install django-oidc
 
 # Replace v2.0.0 with the tag or branch you need.
 pip install git+https://github.com/jhuapl-boss/boss-oidc2.git@v2.0.0#egg=boss-oidc2
@@ -87,7 +88,7 @@ OIDC_CLAIMS_VERIFICATION = 'preferred_username sub'
 # Allow this user to not have an email address during OIDC claims verification.
 KEYCLOAK_ADMIN_USER = 'bossadmin'
 
-from bossoidc.settings import *
+from bossoidc2.settings import *
 configure_oidc(auth_uri, client_id, public_uri, scope) # NOTE: scope is optional and can be left out
 ```
 
