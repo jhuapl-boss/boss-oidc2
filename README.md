@@ -94,7 +94,7 @@ configure_oidc(auth_uri, client_id, public_uri, scope) # NOTE: scope is optional
 Add the required URLs to the Django project in urls.py:
 
 ```py
-url(r'openid/', include('djangooidc.urls')),
+urlpatterns.append(url(r'^openid/', include('mozilla_django_oidc.urls')))
 ```
 
 Run the following migration to create the table for storing the Keycloak UID
