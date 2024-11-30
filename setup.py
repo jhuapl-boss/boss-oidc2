@@ -26,7 +26,7 @@ def read(filename):
 if __name__ == '__main__':
     setup(
         name='boss-oidc2',
-        version='2.0.1',
+        version='2.0.2',
         packages=find_packages(),
         url='https://github.com/jhuapl-boss/boss-oidc2',
         license="Apache Software License",
@@ -42,7 +42,6 @@ if __name__ == '__main__':
             'Operating System :: OS Independent',
             'Natural Language :: English',
             'Programming Language :: Python :: 3',
-            'Programming Language :: Python :: 3.7',
-            'Programming Language :: Python :: 3.8',
+            'Programming Language :: Python :: 3.12',
         ],
     )

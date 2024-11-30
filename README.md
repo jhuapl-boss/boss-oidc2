@@ -11,7 +11,7 @@ captured in the code. Testing with other OIDC providers has not been tested.
 
 ## Compatibility
 
-This plugin is tested and used with Keycloak 11.0.0 and Django 2.2.x.
+This plugin is tested and used with Keycloak 24.0.0 and Django 4.2.x.
 
 
 ## Quickstart
